@@ -3,6 +3,9 @@
 // add item
 $message = $this->itemAdd();
 
+if ($message == 200)
+    header('Location: http://symfony.loc/admin/dashboard');
+
 // tree
 $this->getChildren();
 $this->createTree();
@@ -12,7 +15,7 @@ $tree = $this->getTree();
 
 // Edit
 $data = $this->getItem();
-
+//d($data,1);
 ?>
 
 <p><a href="/admin/dashboard">Dashboard</a></p>
@@ -22,10 +25,9 @@ $data = $this->getItem();
 
 <form name="category" method="post">
 
-    <b>action_ru</b><br>
-    <input type="checkbox" name="action_ru" value="1" <?php if (isset($data['action_ru']) && $data['action_ru'] > 0): ?>checked="checked"<?php endif; ?>><br>
-    action_en<br>
-    <input type="checkbox" name="action_en" value="1" <?php if (isset($data['action_en']) && $data['action_en'] > 0): ?>checked="checked"<?php endif; ?>><br>
+
+    action<br>
+    <input type="checkbox" name="action" value="1" <?php if (isset($data['action']) && $data['action'] > 0): ?>checked="checked"<?php endif; ?>><br>
 
     parent_id<br>
     <select name="parent_id">
@@ -38,34 +40,30 @@ $data = $this->getItem();
         <?php endforeach; ?>
     </select><br>
 
-    <b>name_ru</b><br>
-    <input type="text" name="name_ru" value="<?php echo empty($data['name_ru'])?'':$data['name_ru']; ?>"><br>
-    name_en<br>
-    <input type="text" name="name_en"><br>
-    <b>short_description_ru</b><br>
-    <textarea name="short_description_ru"></textarea><br>
-    short_description_en<br>
-    <textarea name="short_description_en"></textarea><br>
-    <b>description_ru</b><br>
-    <textarea name="description_ru"></textarea><br>
-    description_en<br>
-    <textarea name="description_en"></textarea><br>
-    <b>meta_title_ru</b><br>
-    <input type="text" name="meta_title_ru"><br>
-    meta_title_en<br>
-    <input type="text" name="meta_title_en"><br>
-    meta_description_en<br>
-    <textarea name="meta_description_en"></textarea><br>
-    <b>meta_description_ru</b><br>
-    <textarea name="meta_description_ru"></textarea><br>
-    <b>meta_keywords_ru</b><br>
-    <textarea name="meta_keywords_ru"></textarea><br>
-    meta_keywords_en<br>
-    <textarea name="meta_keywords_en"></textarea><br>
-    <b>file_ru</b><br>
-    <input type="text" name="file_ru"><br>
-    file_en<br>
-    <input type="text" name="file_en"><br>
+    url_key<br>
+    <input type="text" name="url_key" value="<?php echo empty($data['url_key'])?'':$data['url_key']; ?>"><br>
+
+
+    name<br>
+    <input type="text" name="name" value="<?php echo empty($data['name'])?'':$data['name']; ?>"><br>
+
+    short_description<br>
+    <textarea name="short_description"><?php echo empty($data['short_description'])?'':$data['short_description']; ?></textarea><br>
+
+    description<br>
+    <textarea name="description"><?php echo empty($data['description'])?'':$data['description']; ?></textarea><br>
+
+    meta_title<br>
+    <input type="text" name="meta_title" value="<?php echo empty($data['meta_title'])?'':$data['meta_title']; ?>"><br>
+
+    meta_description<br>
+    <textarea name="meta_description"><?php echo empty($data['meta_description'])?'':$data['meta_description']; ?></textarea><br>
+
+    meta_keywords<br>
+    <textarea name="meta_keywords"><?php echo empty($data['meta_keywords'])?'':$data['meta_keywords']; ?></textarea><br>
+
+    file<br>
+    <input type="text" name="file" value="<?php echo empty($data['file'])?'':$data['file']; ?>"><br>
 
     <input type="submit" value="save">
 

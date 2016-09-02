@@ -28,18 +28,52 @@ class Templates
      */
     public function getTplPath()
     {
+
         $path = '';
         if (empty($this->params)) {
 
+            return 'front/home.php';
+
+
         } elseif ($this->params[0] == 'admin') {
+
             $urlPath = $this->params;
             array_shift($urlPath);
             $urlPath = implode('/', $urlPath);
             $urlPath = preg_replace('#\.html#', '', $urlPath);
             $path = 'adminhtml/' . $urlPath . '.php';
             return $path;
+
         } else {
 
+            $urlPath = $this->params;
+            $urlPath = array_reverse($urlPath);
+            $urlPath[0] = preg_replace('#\.html#', '', $urlPath[0]);
+            $this->parents = array();
+            $this->getParentsByUrlKey($urlPath[0]);
+
+            return 'front/home.php';
+
+        }
+    }
+
+//    public function getPageId($urlKey)
+//    {
+//        return $this->getParentsByUrlKey($urlKey);
+//    }
+
+    public function getParentsByUrlKey($urlKey)
+    {
+        $sql = '
+            SELECT id, parent_id FROM category
+            WHERE url_key = "' . $urlKey . '"
+        ';
+
+        foreach ($this->pdo->query($sql) as $row) {
+            if ($row['parent_id'] > 0) {
+                $this->parents[] = $row['parent_id'];
+                $this->getParentsByUrlKey($row['parent_id']);
+            }
         }
     }
 
@@ -59,7 +93,7 @@ class Templates
     }
 
     /**
-     * Add element
+     * Add/update element
      *
      * @return string|void
      */
@@ -69,6 +103,7 @@ class Templates
             return;
 
         $val = empty($_POST['parent_id'])?0:(int)$_POST['parent_id'];
+        $url_key = empty($_POST['url_key'])?0:$_POST['url_key'];
         if (!empty($_GET['item'])) $itemId = (int)$_GET['item']; else $itemId = 0;
 
         // Validation
@@ -86,22 +121,24 @@ class Templates
         // Save/Update tree
         if ($itemId < 1) {
             // Create item
-            $sql = "INSERT INTO category (parent_id) VALUES (:parent_id)";
+            $sql = "INSERT INTO category (parent_id, url_key) VALUES (:parent_id, :url_key)";
             $stm = $this->pdo->prepare($sql);
             $stm->bindParam(':parent_id', $val, PDO::PARAM_INT);
+            $stm->bindParam(':url_key', $url_key, PDO::PARAM_INT);
             $stm->execute();
             $elementId = $this->pdo->lastInsertId();
         } else {
-            $sql = "UPDATE category SET parent_id = :parent_id WHERE id = " . $itemId;
+            $sql = "UPDATE category SET parent_id = :parent_id, url_key = :url_key WHERE id = " . $itemId;
             $stm = $this->pdo->prepare($sql);
             $stm->bindParam(':parent_id', $val, PDO::PARAM_INT);
+            $stm->bindParam(':url_key', $url_key, PDO::PARAM_INT);
             $stm->execute();
         }
 
 
 
         // Create description
-        $cols = array('id','action_ru','action_en','name_ru','name_en','short_description_ru','short_description_en','description_ru','description_en','meta_title_ru','meta_title_en','meta_description_en','meta_description_ru','meta_keywords_ru','meta_keywords_en','file_ru','file_en');
+        $cols = array('id','action','name','short_description','description','meta_title','meta_description','meta_keywords','file');
 
         foreach ($cols as $val) {
             $colsPdo[] = "`$val`";
@@ -139,6 +176,8 @@ class Templates
                 $stm->bindParam(':' . $colName, $postParams[$colName], PDO::PARAM_INT);
         }
         $stm->execute();
+
+        return 200;
     }
 
 
@@ -180,7 +219,7 @@ class Templates
                 $this->tree[] = array(
                     'id' => $value["id"],
                     'level' => $level,
-                    'title' => $this->getAttr($value["id"], 'name_ru')
+                    'title' => $this->getAttr($value["id"], 'name')
                 );
 
 
@@ -191,6 +230,12 @@ class Templates
             }
         }
     }
+
+    public function getCategories()
+    {
+        return $this->categories;
+    }
+
 
     public function getTree(){
         return $this->tree;
@@ -203,7 +248,7 @@ class Templates
 
         $id = (int)$_GET['item'];
         $sql = "
-            SELECT t1.parent_id, t2.*  FROM category AS t1
+            SELECT t1.parent_id, t1.url_key , t2.*  FROM category AS t1
             LEFT JOIN item as t2 ON t1.id = t2.id
             WHERE t1.id = ".$id."
         ";
