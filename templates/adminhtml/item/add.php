@@ -4,7 +4,7 @@
 $message = $this->itemAdd();
 
 // tree
-$this->getParents();
+$this->getChildren();
 $this->createTree();
 $tree = $this->getTree();
 // tree

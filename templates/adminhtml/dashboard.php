@@ -1,7 +1,7 @@
 <?php
 
 // tree
-$this->getParents();
+$this->getChildren();
 $this->createTree();
 $tree = $this->getTree();
 // tree
@@ -12,5 +12,5 @@ $tree = $this->getTree();
 
 
 <?php foreach ($tree as $option): ?>
-    <?php echo str_repeat('|--- ', $option['level']) . $option['title'] ?> <?php echo $option['title'] ?> <a href="/admin/item/add?item=<?php echo $option['id'] ?>">[Edit]</a><br>
+    <?php echo str_repeat('|--- ', $option['level']) ?> <?php echo $option['title'] ?> <a href="/admin/item/add?item=<?php echo $option['id'] ?>">[Edit]</a><br>
 <?php endforeach; ?>

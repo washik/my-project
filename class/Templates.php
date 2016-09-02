@@ -6,11 +6,13 @@ class Templates
     protected $pdo;
     protected $categories;
     protected $tree;
+    protected $parents;
 
     public function __construct($params, $pdo)
     {
         $this->params = $params;
         $this->pdo = $pdo;
+        $this->parents = array();
     }
 
     public function getHtml()
@@ -19,6 +21,11 @@ class Templates
         include('templates/' . $tplPath);
     }
 
+    /**
+     * Get tpl
+     *
+     * @return string
+     */
     public function getTplPath()
     {
         $path = '';
@@ -36,6 +43,26 @@ class Templates
         }
     }
 
+    public function getParents($id)
+    {
+        $sql = "
+            SELECT id, parent_id FROM category
+            WHERE id = " . $id . "
+
+        ";
+        foreach ($this->pdo->query($sql) as $row) {
+            if ($row['parent_id'] > 0) {
+                $this->parents[] = $row['parent_id'];
+                $this->getParents($row['parent_id']);
+            }
+        }
+    }
+
+    /**
+     * Add element
+     *
+     * @return string|void
+     */
     public function itemAdd()
     {
         if (empty($_POST))
@@ -48,6 +75,13 @@ class Templates
         if ($val > 0 && $val == $itemId) {
             return "[ERROR]: id = parent_id";
         }
+        if ($val > 0)
+        {
+            $this->getParents($val);
+            if (in_array($itemId, $this->parents))
+                return "[ERROR]: parent_id is children";
+        }
+
 
         // Save/Update tree
         if ($itemId < 1) {
@@ -108,7 +142,7 @@ class Templates
     }
 
 
-    public function getParents()
+    public function getChildren()
     {
         $sql = "
             SELECT * FROM category
