@@ -5,7 +5,7 @@ class Templates
     protected $params;
     protected $pdo;
     protected $categories;
-    protected $treeHtml;
+    protected $tree;
 
     public function __construct($params, $pdo)
     {
@@ -41,14 +41,30 @@ class Templates
         if (empty($_POST))
             return;
 
-        $val = $_POST['parent_id'];
+        $val = empty($_POST['parent_id'])?0:(int)$_POST['parent_id'];
+        if (!empty($_GET['item'])) $itemId = (int)$_GET['item']; else $itemId = 0;
 
-        // Create item
-        $sql = "INSERT INTO category (parent_id) VALUES (:parent_id)";
-        $stm = $this->pdo->prepare($sql);
-        $stm->bindParam(':parent_id', $val, PDO::PARAM_INT);
-        $stm->execute();
-        $elementId = $this->pdo->lastInsertId();
+        // Validation
+        if ($val > 0 && $val == $itemId) {
+            return "[ERROR]: id = parent_id";
+        }
+
+        // Save/Update tree
+        if ($itemId < 1) {
+            // Create item
+            $sql = "INSERT INTO category (parent_id) VALUES (:parent_id)";
+            $stm = $this->pdo->prepare($sql);
+            $stm->bindParam(':parent_id', $val, PDO::PARAM_INT);
+            $stm->execute();
+            $elementId = $this->pdo->lastInsertId();
+        } else {
+            $sql = "UPDATE category SET parent_id = :parent_id WHERE id = " . $itemId;
+            $stm = $this->pdo->prepare($sql);
+            $stm->bindParam(':parent_id', $val, PDO::PARAM_INT);
+            $stm->execute();
+        }
+
+
 
         // Create description
         $cols = array('id','action_ru','action_en','name_ru','name_en','short_description_ru','short_description_en','description_ru','description_en','meta_title_ru','meta_title_en','meta_description_en','meta_description_ru','meta_keywords_ru','meta_keywords_en','file_ru','file_en');
@@ -56,21 +72,34 @@ class Templates
         foreach ($cols as $val) {
             $colsPdo[] = "`$val`";
             $valuesPdo[] = ":" .$val;
+            $update[] = $val . ' = :' . $val;
         }
         $colsPdo = implode(',', $colsPdo);
         $valuesPdo = implode(',', $valuesPdo);
+        $update = implode(',', $update);
 
-        $sql = "
-          INSERT INTO item (
-            " . $colsPdo . "
-        ) VALUES (
-            " .$valuesPdo . "
-        )";
-        //d($sql,1);
+
+        // Save/Update item
+        if ($itemId < 1) {
+            $sql = "
+              INSERT INTO item (
+                " . $colsPdo . "
+            ) VALUES (
+                " . $valuesPdo . "
+            )";
+        } else {
+            $sql = "
+              UPDATE item SET
+              " . $update . "
+              WHERE id = " . $itemId . "
+              ";
+        }
         $stm = $this->pdo->prepare($sql);
-
         $postParams = $_POST;
-        $postParams['id'] = $elementId;
+        if ($itemId < 1)
+            $postParams['id'] = $elementId;
+        else
+            $postParams['id'] = $itemId;
 
         foreach ($cols as $colName) {
                 $stm->bindParam(':' . $colName, $postParams[$colName], PDO::PARAM_INT);
@@ -91,28 +120,47 @@ class Templates
         }
     }
 
-    public function getTree($parent_id = 0, $level = 0) {
+    public function getAttr($id, $attribute)
+    {
+        $sql = "
+            SELECT " . $attribute . " as attr FROM item
+            WHERE id = " . $id . "
+
+        ";
+        foreach ($this->pdo->query($sql) as $row) {
+            return $row['attr'];
+        }
+        return '';
+    }
+
+    /**
+     * Build Tree
+     *
+     * @param int $parent_id
+     * @param int $level
+     */
+    public function createTree($parent_id = 0, $level = 0) {
 
         if (isset($this->categories[$parent_id])) { //Если категория с таким parent_id существует
             foreach ($this->categories[$parent_id] as $value) { //Обходим
-                /**
-                 * Выводим категорию
-                 *  $level * 25 - отступ, $level - хранит текущий уровень вложености (0,1,2..)
-                 */
-                $this->treeHtml.= '<option value="' .$value["id"] . '">' . str_repeat('---', $level) . $value["id"] . "</option>";
+                $this->tree[] = array(
+                    'id' => $value["id"],
+                    'level' => $level,
+                    'title' => $this->getAttr($value["id"], 'name_ru')
+                );
+
+
                 $level = $level + 1; //Увеличиваем уровень вложености
                 //Рекурсивно вызываем эту же функцию, но с новым $parent_id и $level
-                $this->getTree($value["id"], $level);
+                $this->createTree($value["id"], $level);
                 $level = $level - 1; //Уменьшаем уровень вложености
             }
         }
     }
 
-    public function getTreeHtml()
-    {
-        return $this->treeHtml;
+    public function getTree(){
+        return $this->tree;
     }
-
 
     public function getItem()
     {
