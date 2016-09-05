@@ -1,8 +1,9 @@
 <?php
-include('page/head.php')
+include('page/head.php');
+$data = $this->getCuurentData();
 
 ?>
-<div class="container">
+
 
     <div class="row row-offcanvas row-offcanvas-right">
 
@@ -12,12 +13,27 @@ include('page/head.php')
             </p>
 
 
-
+            <?php if (!empty($data)):  ?>
             <div class="jumbotron">
-                <h1>Hello, world!</h1>
-                <p>This is an example to show the potential of an offcanvas layout pattern in Bootstrap. Try some responsive-range viewport sizes to see it in action.</p>
+                <h1><?php echo $data['name'] ?></h1>
+                <p><?php echo $data['short_description'] ?></p>
             </div>
 
+
+            <div class="row">
+                <div class="col-6 col-sm-10 col-lg-11">
+                    <p><?php echo $data['description'] ?></p>
+                </div><!--/span-->
+            </div><!--/row-->
+
+            <?php endif; ?>
+
+
+
+
+
+            <?php
+            /*
 
             <div class="row">
                 <div class="col-6 col-sm-6 col-lg-4">
@@ -51,30 +67,16 @@ include('page/head.php')
                     <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
                 </div><!--/span-->
             </div><!--/row-->
+            */
+            ?>
+
+
         </div><!--/span-->
 
-        <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
-            <div class="list-group">
-                <a href="#" class="list-group-item active">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-                <a href="#" class="list-group-item">Link</a>
-            </div>
-        </div><!--/span-->
+
+
+        <?php include("page/right.php") ?>
     </div><!--/row-->
 
-    <hr>
-
-    <footer>
-        <p>&copy; Company 2014</p>
-    </footer>
-
-</div><!--/.container-->
 
 <?php include("page/footer.php") ?>

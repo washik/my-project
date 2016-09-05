@@ -71,3 +71,5 @@ $categories = $this->getCategories();
 
     </div><!-- /.container -->
 </div><!-- /.navbar -->
+
+<div class="container">

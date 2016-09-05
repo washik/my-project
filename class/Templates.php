@@ -51,16 +51,43 @@ class Templates
             $urlPath[0] = preg_replace('#\.html#', '', $urlPath[0]);
             $this->parents = array();
             $this->getParentsByUrlKey($urlPath[0]);
+            //$this->cuurentId = $this->getIdByUrlKey($urlPath[0]);
+            $this->cuurentData = $this->getDataById($urlPath[0]);
 
             return 'front/home.php';
 
         }
     }
 
-//    public function getPageId($urlKey)
-//    {
-//        return $this->getParentsByUrlKey($urlKey);
-//    }
+    public function getCuurentData()
+    {
+        return $this->cuurentData;
+    }
+
+    public function getDataById($urlKey)
+    {
+        $sql = '
+            SELECT t2.* FROM category as t1
+            LEFT JOIN item as t2 ON t1.id = t2.id
+            WHERE t1.url_key = "' . $urlKey . '"
+        ';
+
+        foreach ($this->pdo->query($sql) as $row) {
+            return $row;
+        }
+    }
+
+    public function getCurrentId($urlKey)
+    {
+        $sql = '
+            SELECT id, parent_id FROM category
+            WHERE url_key = "' . $urlKey . '"
+        ';
+
+        foreach ($this->pdo->query($sql) as $row) {
+            return $row;
+        }
+    }
 
     public function getParentsByUrlKey($urlKey)
     {
@@ -91,6 +118,7 @@ class Templates
             }
         }
     }
+
 
     /**
      * Add/update element
